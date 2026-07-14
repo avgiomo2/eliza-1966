@@ -5,227 +5,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ELIZA — The Original AI</title>
 <style>
-  :root {
-    --bg: #0d0d0d;
-    --surface: #141414;
-    --border: #2a2a2a;
-    --accent: #00c896;
-    --accent-dim: #007a5c;
-    --text: #e8e8e8;
-    --text-dim: #888;
-    --eliza: #00c896;
-    --user: #7eb8f7;
-    --font: 'Courier New', Courier, monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
-  header h1 {
-    font-size: 1.1rem;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  header .subtitle {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-  .controls {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  select, input[type="text"], input[type="password"] {
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 5px 8px;
-    font-family: var(--font);
-    font-size: 0.75rem;
-    border-radius: 3px;
-    outline: none;
-  }
-  select:focus, input:focus {
-    border-color: var(--accent-dim);
-  }
-  #apiKeyInput {
-    width: 200px;
-    letter-spacing: 1px;
-  }
-  .btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    padding: 5px 10px;
-    font-family: var(--font);
-    font-size: 0.75rem;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.15s;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,200,150,0.08); }
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  #chat::-webkit-scrollbar { width: 4px; }
-  #chat::-webkit-scrollbar-track { background: var(--bg); }
-  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .msg {
-    max-width: 700px;
-    line-height: 1.6;
-    font-size: 0.9rem;
-    padding: 10px 14px;
-    border-radius: 4px;
-    animation: fadeIn 0.2s ease;
-  }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-  .msg.eliza {
-    border-left: 2px solid var(--eliza);
-    color: var(--eliza);
-    background: rgba(0,200,150,0.04);
-    align-self: flex-start;
-  }
-  .msg.eliza::before { content: "ELIZA › "; font-weight: bold; letter-spacing: 1px; }
-  .msg.user {
-    border-left: 2px solid var(--user);
-    color: var(--user);
-    background: rgba(126,184,247,0.04);
-    align-self: flex-end;
-    text-align: right;
-  }
-  .msg.user::before { content: "YOU › "; font-weight: bold; letter-spacing: 1px; color: var(--user); }
-  .msg.system {
-    color: var(--text-dim);
-    font-size: 0.75rem;
-    border-left: 2px solid var(--border);
-    background: none;
-    align-self: center;
-    font-style: italic;
-  }
-  footer {
-    padding: 14px 20px;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  #userInput {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 14px;
-    font-family: var(--font);
-    font-size: 0.9rem;
-    border-radius: 3px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  #userInput:focus { border-color: var(--accent-dim); }
-  #userInput::placeholder { color: var(--text-dim); }
-  #sendBtn {
-    background: var(--accent-dim);
-    color: #fff;
-    border: none;
-    padding: 10px 18px;
-    font-family: var(--font);
-    font-size: 0.85rem;
-    cursor: pointer;
-    border-radius: 3px;
-    letter-spacing: 1px;
-    transition: background 0.15s;
-  }
-  #sendBtn:hover { background: var(--accent); }
-  #micBtn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  #micBtn:hover { border-color: var(--user); color: var(--user); }
-  #micBtn.listening { border-color: red; color: red; animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .voice-indicator {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    min-width: 60px;
-    text-align: center;
-  }
-  .api-label { font-size: 0.72rem; color: var(--text-dim); letter-spacing: 1px; }
+  :root{--bg:#0d0d0d;--surface:#141414;--border:#2a2a2a;--accent:#00c896;--accent-dim:#007a5c;--text:#e8e8e8;--text-dim:#888;--eliza:#00c896;--user:#7eb8f7;--font:'Courier New',Courier,monospace;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh;display:flex;flex-direction:column;}
+  header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--surface);flex-shrink:0;}
+  header h1{font-size:1.1rem;letter-spacing:3px;color:var(--accent);text-transform:uppercase;}
+  header .subtitle{font-size:0.7rem;color:var(--text-dim);letter-spacing:1px;}
+  .controls{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  select,input[type="text"],input[type="password"]{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:5px 8px;font-family:var(--font);font-size:0.75rem;border-radius:3px;outline:none;}
+  select:focus,input:focus{border-color:var(--accent-dim);}
+  #apiKeyInput{width:200px;}
+  .btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:5px 10px;font-family:var(--font);font-size:0.75rem;cursor:pointer;border-radius:3px;transition:all 0.15s;}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,200,150,0.08);}
+  #chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;}
+  #chat::-webkit-scrollbar{width:4px;}
+  #chat::-webkit-scrollbar-track{background:var(--bg);}
+  #chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  .msg{max-width:700px;line-height:1.6;font-size:0.9rem;padding:10px 14px;border-radius:4px;animation:fadeIn 0.2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .msg.eliza{border-left:2px solid var(--eliza);color:var(--eliza);background:rgba(0,200,150,0.04);align-self:flex-start;}
+  .msg.eliza::before{content:"ELIZA › ";font-weight:bold;letter-spacing:1px;}
+  .msg.user{border-left:2px solid var(--user);color:var(--user);background:rgba(126,184,247,0.04);align-self:flex-end;text-align:right;}
+  .msg.user::before{content:"YOU › ";font-weight:bold;letter-spacing:1px;color:var(--user);}
+  .msg.system{color:var(--text-dim);font-size:0.75rem;border-left:2px solid var(--border);background:none;align-self:center;font-style:italic;}
+  footer{padding:14px 20px;border-top:1px solid var(--border);background:var(--surface);display:flex;gap:10px;align-items:center;flex-shrink:0;}
+  #userInput{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:var(--font);font-size:0.9rem;border-radius:3px;outline:none;transition:border-color 0.15s;}
+  #userInput:focus{border-color:var(--accent-dim);}
+  #userInput::placeholder{color:var(--text-dim);}
+  #sendBtn{background:var(--accent-dim);color:#fff;border:none;padding:10px 18px;font-family:var(--font);font-size:0.85rem;cursor:pointer;border-radius:3px;letter-spacing:1px;transition:background 0.15s;}
+  #sendBtn:hover{background:var(--accent);}
+  #micBtn{background:none;border:1px solid var(--border);color:var(--text-dim);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
+  #micBtn:hover{border-color:var(--user);color:var(--user);}
+  #micBtn.listening{border-color:red;color:red;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .voice-indicator{font-size:0.7rem;color:var(--text-dim);letter-spacing:1px;min-width:60px;text-align:center;}
+  .api-label{font-size:0.72rem;color:var(--text-dim);letter-spacing:1px;}
 </style>
 </head>
 <body>
-
 <header>
-  <div>
-    <h1>ELIZA</h1>
-    <div class="subtitle">MIT AI Lab · 1966 · Joseph Weizenbaum</div>
-  </div>
+  <div><h1>ELIZA</h1><div class="subtitle">MIT AI Lab · 1966 · Joseph Weizenbaum</div></div>
   <div class="controls">
-    <select id="langSelect" title="Language">
-      <option value="en">EN</option>
-      <option value="de">DE</option>
-      <option value="fr">FR</option>
-      <option value="it">IT</option>
-      <option value="es">ES</option>
-    </select>
-    <button class="btn" id="ttsToggle" title="Toggle ElevenLabs TTS">🔊 TTS</button>
+    <select id="langSelect"><option value="en">EN</option><option value="de">DE</option><option value="fr">FR</option><option value="it">IT</option><option value="es">ES</option></select>
+    <button class="btn" id="ttsToggle">🔊 TTS</button>
     <span class="api-label">ElevenLabs key:</span>
-    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off" title="ElevenLabs API key for TTS">
+    <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
     <button class="btn" id="resetBtn">↺ RESET</button>
   </div>
 </header>
-
 <div id="chat"></div>
-
 <footer>
-  <button id="micBtn" title="Hold to speak">🎤</button>
+  <button id="micBtn">🎤</button>
   <span class="voice-indicator" id="voiceStatus"></span>
-  <input type="text" id="userInput" placeholder="Talk to ELIZA…” autocomplete="off">
+  <input type="text" id="userInput" placeholder="Talk to ELIZA…" autocomplete="off">
   <button id="sendBtn">SEND</button>
 </footer>
-
 <script>
-// [Full script content from /home/workdir/attachments/index.html copied here - complete ELIZA engine, language data, TTS, STT logic, etc.]
-// For this response, note that the complete file is being pushed.
-var fullScript = 'COMPLETE LOCAL VERSION WITH ALL DATA';
-// In actual tool call, the entire content is included.
+var ElizaBot=function(r){this.noRandomSelect=r||false;this._dataParsed=false;this.quit=false;this.mem=[];this.lastChoice=[];};
+ElizaBot.prototype={
+_startEliza:function(){this.quit=false;this.mem=[];this.lastChoice=[];if(!this._dataParsed)this._init();for(var k in this.elizaKeywords)this.lastChoice[k]=-1;},
+_init:function(){var sp={};if(this.elizaSynons){for(var i in this.elizaSynons){sp[i]='('+i+'|'+this.elizaSynons[i].join('|')+')';}}if(this.elizaKeywords){var kw=this.elizaKeywords;for(var i=0;i<kw.length;i++){var rules=kw[i][2];for(var j=0;j<rules.length;j++){var d=rules[j][0];for(var s in sp){d=d.replace(new RegExp('@'+s,'g'),sp[s]);}rules[j][0]=new RegExp(d,'i');}}this.elizaKeywords.sort(function(a,b){return b[1]-a[1];});}this._dataParsed=true;},
+transform:function(text){var reply='';this.quit=false;text=text.toLowerCase().replace(/\s*\.\s*/g,' . ').replace(/\s*,\s*/g,' , ').replace(/\s*;\s*/g,' ; ');var parts=text.split(/\s*[.,;]\s*/);var saved='';for(var i=0;i<parts.length;i++){var part=parts[i];if(!part)continue;for(var p in this.elizaPre){part=part.replace(new RegExp('\\b'+p+'\\b','gi'),this.elizaPre[p]);}var quit=false;for(var q=0;q<this.elizaQuits.length;q++){if(part.match(new RegExp('^\\s*'+this.elizaQuits[q]+'\\s*$','i'))){this.quit=true;return this.elizaFinal[Math.floor(Math.random()*this.elizaFinal.length)];}}var m=this._tryKeywords(part);if(m){reply=m;break;}else saved=part;}if(!reply&&saved){var m2=this._tryKeywords(saved);if(m2)reply=m2;}if(!reply){if(this.mem.length>0)reply=this.mem.shift();else reply=this._getResponse('xnone',[saved||'']);}return reply;},
+_tryKeywords:function(text){var kw=this.elizaKeywords;for(var i=0;i<kw.length;i++){var keyword=kw[i][0];var rules=kw[i][2];if(text.match(new RegExp('\\b'+keyword+'\\b','i'))||keyword=='xnone'){for(var j=0;j<rules.length;j++){var m=text.match(rules[j][0]);if(m){var rs=rules[j][1];var idx=Math.floor(Math.random()*rs.length);var r=rs[idx];if(/^goto /i.test(r))return this._getResponse(r.replace(/^goto /i,''),m);if(/^pre:/i.test(r)){this.mem.push(this._fillReassemb(r.replace(/^pre:/i,''),m));continue;}return this._fillReassemb(r,m);}}}}return '';},
+_getResponse:function(key,m){var kw=this.elizaKeywords;for(var i=0;i<kw.length;i++){if(kw[i][0]==key){var rules=kw[i][2];var ri=Math.floor(Math.random()*rules.length);var rs=rules[ri][1];return this._fillReassemb(rs[Math.floor(Math.random()*rs.length)],m||['']);}}return 'I see.';},
+_fillReassemb:function(r,m){var self=this;return r.replace(/\((\d+)\)/g,function(_,n){var cap=m[parseInt(n)]||'';for(var p in self.elizaPost){cap=cap.replace(new RegExp('\\b'+p+'\\b','gi'),self.elizaPost[p]);}return cap.trim();});},
+getInitial:function(){return this.elizaInitials[Math.floor(Math.random()*this.elizaInitials.length)];}
+};
+var EN={initial:["How do you do. Please tell me your problem.","Please tell me what's been bothering you."],final:["Goodbye. It was nice talking to you.","Goodbye. I'm looking forward to our next session."],quits:["bye","goodbye","exit","quit"],pres:{"dont":"don't","cant":"can't","wont":"won't","recollect":"remember","dreamt":"dreamed","dreams":"dream","maybe":"perhaps","certainly":"yes","machine":"computer","machines":"computers","were":"was","you're":"you are","i'm":"i am","same":"alike","identical":"alike","equivalent":"alike"},posts:{"am":"are","your":"my","me":"you","myself":"yourself","yourself":"myself","i":"you","you":"I","my":"your","i'm":"you are"},synons:{"belief":["feel","think","believe","wish"],"family":["mother","mom","father","dad","sister","brother","wife","children","child","husband"],"desire":["want","need"]},keywords:[["xnone",0,[["(.*)",["I'm not sure I understand you fully.","Please go on.","What does that suggest to you?","That is interesting. Please continue.","Tell me more about that.","Does talking about this bother you?"]]]],["sorry",5,[["(.*)",["Please don't apologise.","Apologies are not necessary."]]]],["remember",5,[["(.*)i remember (.*)",["Do you often think of (2)?","Does thinking of (2) bring anything else to mind?","Why do you recollect (2) just now?"]],["(.*)do you remember (.*)",["Did you think I would forget (2)?","What about (2)?","goto what"]]]],["if",3,[["(.*)if (.*)",["Do you think it's likely that (2)?","Do you wish that (2)?","What do you think about (2)?","Really, if (2)?" ]]]],["dream",3,[["(.*)",["What does that dream suggest to you?","Do you dream often?","What persons appear in your dreams?"]]]],["perhaps",5,[["(.*)",["You don't seem quite certain.","Why the uncertain tone?","Can't you be more positive?","You aren't sure?"]]]],["name",15,[["(.*)",["I am not interested in names.","I don't care about names — please continue."]]]],["hello",5,[["(.*)",["How do you do. Please state your problem.","Hi. What seems to be your problem?"]]]],["computer",50,[["(.*)",["Do computers worry you?","Why do you mention computers?","What do you think machines have to do with your problem?","Don't you think computers can help people?"]]]],["am",0,[["(.*)am i (.*)",["Do you believe you are (2)?","Would you want to be (2)?","What would it mean if you were (2)?"]],["(.*)i am (.*)",["goto i"]],["(.*)",["Why do you say 'am'?"]]]],["are",0,[["(.*)are you (.*)",["Why are you interested in whether I am (2) or not?","Would you prefer if I weren't (2)?","Perhaps I am (2) in your fantasies.","goto what"]],["(.*)you are (.*)",["goto you"]],["(.*)are (.*)",["Did you think they might not be (2)?","Possibly they are (2)."]]]],["your",0,[["(.*)your (.*)",["Why are you concerned over my (2)?","What about your own (2)?","Really, my (2)?"]]]],["was",2,[["(.*)was i (.*)",["What if you were (2)?","Do you think you were (2)?","goto what"]],["(.*)i was (.*)",["Were you really?","Why do you tell me you were (2) now?"]]]],["i",0,[["(.*)i want (.*)",["What would it mean to you if you got (2)?","Why do you want (2)?","What if you never got (2)?"]],["(.*)i am (.*)|(.*)i'm (.*)",["How long have you been (2)?","Do you enjoy being (2)?","Do you know anyone else who is (2)?"]],["(.*)i don't (.*)",["Don't you really (2)?","Why don't you (2)?","Does that trouble you?"]],["(.*)i feel (.*)",["Tell me more about such feelings.","Do you often feel (2)?","Of what does feeling (2) remind you?"]],["(.*)i can't (.*)",["How do you know you can't (2)?","Have you tried?","Perhaps you could (2) now."]],["(.*)i think (.*)",["Do you really think so?","But you are not sure (2).","Do you doubt (2)?"]],["(.*)i wish (.*)",["What would it mean to you if you got (2)?","Why do you wish (2)?"]],["(.*)i (.*)",["You say you (2).","Can you elaborate on that?","Tell me more about yourself."]]]],["you",0,[["(.*)you remind me of (.*)",["goto alike"]],["(.*)you are (.*)",["What makes you think I am (2)?","Does it please you to believe I am (2)?","Perhaps you would like to be (2)."]],["(.*)you're (.*)",["goto you"]],["(.*)you (.*) me(.*)",["Why do you think I (2) you?","Really, I (2) you?","What if I did (2) you?"]],["(.*)you (.*)",["We were discussing you — not me.","Oh, I (2)?","What are your feelings now?"]]]],["yes",0,[["(.*)",["You seem quite positive.","I see.","I understand."]]]],["no",0,[["(.*)",["Are you saying 'no' just to be negative?","Why not?","Why 'no'?"]]]],["my",2,[["(.*)my @family (.*)",["Tell me more about your family.","Who else in your family (2)?","What else comes to mind when you think of your (2)?"]],["(.*)my (.*)",["Your (2)?","Why do you say your (2)?","Is it important to you that your (2)?"]]]],["can",0,[["(.*)can you (.*)",["You believe I can (2) don't you?","goto what","You want me to be able to (2)."]],["(.*)can i (.*)",["Whether or not you can (2) depends on you more than me.","Do you want to be able to (2)?","goto what"]]]],["what",0,[["(.*)",["Why do you ask?","What is it you really want to know?","What answer would please you most?","What do you think?","Have you asked anyone else?"]]]],["because",0,[["(.*)",["Is that the real reason?","Don't any other reasons come to mind?","What other reasons might there be?"]]]],["why",0,[["(.*)why don't you (.*)",["Do you believe I don't (2)?","Perhaps I will (2) in good time.","goto what"]],["(.*)why can't i (.*)",["Do you think you should be able to (2)?","Have you any idea why you can't (2)?","goto what"]],["(.*)",["goto what"]]]],["everyone",2,[["(.*)everyone (.*)",["Really, everyone?","Can you think of anyone in particular?","Who, for example?","Who do you think you're talking about?"]]]],["everybody",2,[["(.*)",["goto everyone"]]]],["always",1,[["(.*)",["Can you think of a specific example?","When?","Really, always?"]]]],["alike",10,[["(.*)",["In what way?","What resemblance do you see?","What does that similarity suggest to you?","Could there really be some connection?","How?"]]]],["like",10,[["(.*)like (.*)",["goto alike"]]]],["different",0,[["(.*)",["How is it different?","What differences do you see?","What do you suppose that disparity means?"]]]]]}
+;
+var DE={initial:["Wie geht es Ihnen. Bitte schildern Sie mir Ihr Problem.","Bitte teilen Sie mir mit, was Sie beschäftigt."],final:["Auf Wiedersehen. Es war schön mit Ihnen zu sprechen."],quits:["tschüss","auf wiedersehen","exit","quit","bye"],pres:{},posts:{"ich":"Sie","mein":"Ihr","mir":"Ihnen"},synons:{},keywords:[["xnone",0,[["(.*)",["Ich bin mir nicht sicher, ob ich Sie richtig verstehe.","Bitte fahren Sie fort.","Was sagt Ihnen das?","Bitte erzählen Sie mir mehr darüber."]]]],["hallo",5,[["(.*)",["Wie geht es Ihnen. Bitte schildern Sie Ihr Problem."]]]],["ich bin",0,[["(.*)ich bin (.*)",["Wie lange sind Sie schon (2)?","Glauben Sie, dass es normal ist, (2) zu sein?"]]]],["warum",0,[["(.*)",["Warum fragen Sie?","Was denken Sie?"]]]]]};
+var FR={initial:["Comment allez-vous? Veuillez me décrire votre problème.","Qu'est-ce qui vous préoccupe?"],final:["Au revoir. C'était agréable de vous parler."],quits:["au revoir","exit","quit","bye","adieu"],pres:{},posts:{"je":"vous","mon":"votre","me":"vous","ma":"votre"},synons:{},keywords:[["xnone",0,[["(.*)",["Je ne suis pas sûr de bien vous comprendre.","Continuez, je vous en prie.","C'est intéressant. Continuez.","Parlez-moi davantage de cela."]]]],["bonjour",5,[["(.*)",["Bonjour. Veuillez me décrire votre problème."]]]],["je suis",0,[["(.*)je suis (.*)",["Depuis combien de temps êtes-vous (2)?","Aimez-vous être (2)?"]]]],["pourquoi",0,[["(.*)",["Pourquoi demandez-vous?","Qu'en pensez-vous?"]]]]]};
+var IT={initial:["Come sta? La prego di descrivermi il suo problema.","Cosa la preoccupa?"],final:["Arrivederci. È stato un piacere parlare con lei."],quits:["arrivederci","exit","quit","bye","ciao"],pres:{},posts:{"io":"lei","mio":"suo","mi":"le"},synons:{},keywords:[["xnone",0,[["(.*)",["Non sono sicuro di capirla bene.","Continui pure.","È interessante. Continui.","Mi dica di più a riguardo."]]]],["ciao",5,[["(.*)",["Salve. Mi descriva il suo problema."]]]],["sono",0,[["(.*)sono (.*)",["Da quanto tempo è (2)?","Le piace essere (2)?"]]]],["perché",0,[["(.*)",["Perché lo chiede?","Cosa ne pensa?"]]]]]};
+var ES={initial:["¿Cómo está usted? Por favor, cuénteme su problema.","¿Qué le preocupa?"],final:["Adiós. Ha sido un placer hablar con usted."],quits:["adiós","adios","exit","quit","bye","hasta luego"],pres:{},posts:{"yo":"usted","mi":"su","me":"le"},synons:{},keywords:[["xnone",0,[["(.*)",["No estoy seguro de haberle entendido bien.","Por favor, continúe.","Cuénteme más sobre eso."]]]],["hola",5,[["(.*)",["Hola. Por favor, cuénteme su problema."]]]],["soy",0,[["(.*)soy (.*)",["¿Hace cuánto tiempo es usted (2)?","¿Le gusta ser (2)?"]]]],["por qué",0,[["(.*)",["¿Por qué pregunta?","¿Qué piensa usted?"]]]]]};
+var LANGS={en:EN,de:DE,fr:FR,it:IT,es:ES};
+var VOICES={en:['en-US','en-GB'],de:['de-DE'],fr:['fr-FR'],it:['it-IT'],es:['es-ES','es-MX']};
+var EL_VOICE='EXAVITQu4vr4xnSDxMaL';
+var eliza=new ElizaBot(),currentLang='en',ttsEnabled=false,apiKey='',recognition=null,isListening=false,audioQueue=[],isPlaying=false;
+function loadLang(lang){var d=LANGS[lang];eliza.elizaKeywords=JSON.parse(JSON.stringify(d.keywords));eliza.elizaInitials=d.initial;eliza.elizaFinal=d.final;eliza.elizaQuits=d.quits;eliza.elizaPre=d.pres;eliza.elizaPost=d.posts;eliza.elizaSynons=d.synons||{};eliza._dataParsed=false;eliza._startEliza();currentLang=lang;}
+var chat=document.getElementById('chat');
+function addMsg(text,type){var div=document.createElement('div');div.className='msg '+type;div.textContent=text;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;}
+async function speakEL(text){if(!apiKey)return speakBrowser(text);try{var r=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+EL_VOICE+'/stream',{method:'POST',headers:{'xi-api-key':apiKey,'Content-Type':'application/json','Accept':'audio/mpeg'},body:JSON.stringify({text:text,model_id:'eleven_multilingual_v2',voice_settings:{stability:0.5,similarity_boost:0.75}})});if(!r.ok)throw 0;var blob=await r.blob();var url=URL.createObjectURL(blob);var a=new Audio(url);a.onended=function(){URL.revokeObjectURL(url);isPlaying=false;playNext();};a.onerror=function(){isPlaying=false;playNext();};audioQueue.push(a);if(!isPlaying)playNext();}catch(e){speakBrowser(text);}}
+function playNext(){if(!audioQueue.length){isPlaying=false;return;}isPlaying=true;audioQueue.shift().play();}
+function speakBrowser(text){if(!window.speechSynthesis)return;var u=new SpeechSynthesisUtterance(text);var vl=VOICES[currentLang]||['en-US'];window.speechSynthesis.getVoices().forEach(function(v){if(vl.some(function(l){return v.lang.startsWith(l.split('-')[0]);}))u.voice=u.voice||v;});u.lang=vl[0];window.speechSynthesis.speak(u);}
+function speak(t){if(ttsEnabled)speakEL(t);}
+function initSTT(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('micBtn').style.display='none';return;}recognition=new SR();recognition.continuous=false;recognition.interimResults=false;recognition.onresult=function(e){document.getElementById('userInput').value=e.results[0][0].transcript;stopListening();sendMessage();};recognition.onerror=recognition.onend=function(){stopListening();};}
+function startListening(){if(!recognition||isListening)return;recognition.lang=(VOICES[currentLang]||['en-US'])[0];try{recognition.start();}catch(e){return;}isListening=true;document.getElementById('micBtn').classList.add('listening');document.getElementById('voiceStatus').textContent='● REC';}
+function stopListening(){if(!isListening)return;try{recognition.stop();}catch(e){}isListening=false;document.getElementById('micBtn').classList.remove('listening');document.getElementById('voiceStatus').textContent='';}
+function sendMessage(){var inp=document.getElementById('userInput');var text=inp.value.trim();if(!text)return;inp.value='';addMsg(text,'user');var reply=eliza.transform(text);setTimeout(function(){addMsg(reply,'eliza');speak(reply);if(eliza.quit)setTimeout(function(){addMsg('[ Session ended. Refresh to restart. ]','system');},400);},180);}
+loadLang('en');var g=eliza.getInitial();addMsg(g,'eliza');speak(g);initSTT();
+document.getElementById('sendBtn').onclick=sendMessage;
+document.getElementById('userInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendMessage();});
+document.getElementById('micBtn').addEventListener('click',function(){isListening?stopListening():startListening();});
+document.getElementById('ttsToggle').addEventListener('click',function(){ttsEnabled=!ttsEnabled;this.classList.toggle('active',ttsEnabled);this.textContent=ttsEnabled?'🔊 TTS ON':'🔊 TTS';});
+document.getElementById('apiKeyInput').addEventListener('input',function(){apiKey=this.value.trim();});
+document.getElementById('langSelect').addEventListener('change',function(){loadLang(this.value);chat.innerHTML='';var g=eliza.getInitial();addMsg(g,'eliza');speak(g);addMsg('[ Language: '+this.value.toUpperCase()+' ]','system');});
+document.getElementById('resetBtn').addEventListener('click',function(){eliza._startEliza();chat.innerHTML='';var g=eliza.getInitial();addMsg(g,'eliza');speak(g);});
 </script>
 </body>
 </html>
